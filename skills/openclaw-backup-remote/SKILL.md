@@ -1,37 +1,40 @@
 ---
 name: openclaw-backup-remote
-description: Create, verify, and schedule OpenClaw backups, then upload archives to remote storage with rclone (Google Drive, S3, Dropbox, OneDrive, WebDAV, and similar remotes). Use when users ask to automate daily/weekly OpenClaw backups, migrate OpenClaw state safely, keep retention policies, or push backup archives to cloud/NAS storage.
+description: Automate verified OpenClaw backups and upload archives to remote storage with rclone (Google Drive, S3, OneDrive, Dropbox, WebDAV, NAS remotes). Use when users ask to schedule daily/weekly backups, push backups off-machine, apply retention policies, or validate migration readiness.
 ---
 
 # OpenClaw Backup + Remote Storage
 
-Run reliable backup automation for OpenClaw with `openclaw backup create` and `rclone`.
+Create reliable backup automation with `openclaw backup create` and `rclone`.
 
-## 1) Validate prerequisites
+## Prerequisites
 
-- Check `openclaw` is installed and working.
-- Check `rclone` is installed when remote upload is required.
-- Check at least one rclone remote exists (`rclone listremotes`).
+Check these first:
 
-If a prerequisite is missing, stop and provide exact install/config commands.
+```bash
+openclaw --version
+rclone version
+rclone listremotes
+```
 
-## 2) Create and verify backup
+If anything is missing, stop and return exact setup commands.
 
-Use:
+## Create verified backups
+
+Use verified archives by default:
 
 ```bash
 openclaw backup create --verify --output <backup-dir>
 ```
 
-Defaults:
+Optional modes only when requested:
 
-- Use a dedicated backup directory.
-- Keep `--verify` enabled unless user explicitly opts out.
-- Prefer full backups unless user requests `--only-config` or `--no-include-workspace`.
+- `--only-config`
+- `--no-include-workspace`
 
-## 3) Upload to remote storage
+## Upload to remote storage
 
-Use rclone copy/sync patterns with explicit include filters:
+Prefer `copy` for safety (non-destructive):
 
 ```bash
 rclone copy "<backup-dir>" "<remote>:<path>" --include "*openclaw-backup*.tar.gz"
@@ -39,45 +42,44 @@ rclone copy "<backup-dir>" "<remote>:<path>" --include "*openclaw-backup*.tar.gz
 
 Examples:
 
-- `gdrive:OpenClawBackups`
-- `s3:company-backups/openclaw`
-- `onedrive:OpenClawBackups`
+```bash
+rclone copy "C:\Backups\OpenClaw" "gdrive:OpenClawBackups" --include "*openclaw-backup*.tar.gz"
+rclone copy "/var/backups/openclaw" "s3:org-backups/openclaw" --include "*openclaw-backup*.tar.gz"
+rclone copy "/srv/openclaw-backups" "onedrive:OpenClawBackups" --include "*openclaw-backup*.tar.gz"
+```
 
-When uncertain, default to `copy` (safer) instead of `sync`.
+Use `sync` only when the user explicitly wants destination pruning behavior.
 
-## 4) Add retention
+## Retention
 
-Apply retention in both locations when requested:
+Apply retention when requested (default target: keep last 30):
 
-- Local: keep last N archives (default 30).
-- Remote: keep last N archives (default 30) if user wants cloud pruning.
+- Local retention: delete oldest local archives beyond N.
+- Remote retention: delete oldest remote archives beyond N.
 
-Always sort by modified time and delete oldest first.
+Sort by modified time and remove oldest first.
 
-## 5) Schedule recurring backups
+## Scheduling
 
-Create cron jobs with explicit timezone and reminder-like summary text when relevant:
+For recurring jobs, create cron schedules with explicit timezone and concise status output.
 
-- Daily at 2 AM local timezone for typical setups.
-- Use isolated `agentTurn` cron jobs for backup automation.
-- Include concise success/failure output in delivery.
+Suggested default schedule:
 
-## 6) Verify end-to-end after scheduling
+- Daily at 02:00 local time
 
-After creating automation:
+After creating the schedule, run one manual test and confirm:
 
-1. Trigger one manual run.
-2. Confirm local archive exists.
-3. Confirm archive appears in remote destination.
-4. Report status and next scheduled run time.
+1. archive exists locally
+2. archive exists remotely
+3. next run time is set
 
 ## Failure handling
 
-On failure, report:
+On any failure, report all of the following:
 
-- Failing step
-- Exact command and error
-- Minimal fix
-- Whether local backup succeeded even if remote upload failed
+- failing step
+- exact command and error
+- minimal fix
+- whether local backup succeeded even if upload failed
 
-Never silently ignore upload or verification failures.
+Never treat an upload or verify failure as success.

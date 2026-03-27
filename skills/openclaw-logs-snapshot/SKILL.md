@@ -34,7 +34,7 @@ openclaw gateway status
 
 ## Output format
 
-Return:
+Respond with:
 
 - time window reviewed
 - top error signatures (bullet list)

@@ -13,6 +13,7 @@ Run in order:
 
 ```bash
 openclaw status
+openclaw status --deep
 openclaw health --json
 openclaw gateway status
 ```

@@ -32,7 +32,7 @@ gh pr view <pr-number> --repo <owner/repo> --json title,body,author,mergeStateSt
 
 ## Output format
 
-Return:
+Respond with:
 
 - merge readiness verdict (ready / needs fixes)
 - blockers (if any)

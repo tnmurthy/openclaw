@@ -35,7 +35,9 @@ rclone lsf <remote>:<path>
 
 ## Optional write test (with approval)
 
-Use only after explicit approval:
+Use only after explicit approval.
+
+Linux/macOS:
 
 ```bash
 echo test > /tmp/rclone-test.txt
@@ -44,7 +46,16 @@ rclone lsf <remote>:<path> --include "rclone-test.txt"
 rclone delete <remote>:<path>/rclone-test.txt
 ```
 
-On Windows, use a temp file path under `%TEMP%`.
+Windows (PowerShell):
+
+```powershell
+$test = Join-Path $env:TEMP "rclone-test.txt"
+"test" | Set-Content -Path $test
+rclone copy $test <remote>:<path>
+rclone lsf <remote>:<path> --include "rclone-test.txt"
+rclone delete <remote>:<path>/rclone-test.txt
+Remove-Item $test -ErrorAction SilentlyContinue
+```
 
 ## Reporting
 
